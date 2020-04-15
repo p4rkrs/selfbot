@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"log"
-	"os"
+
+	"github.com/dying/selfbot/config"
 
 	"github.com/diamondburned/arikawa/bot"
 	"github.com/diamondburned/arikawa/handler"
@@ -11,7 +13,10 @@ import (
 
 // To run, do `BOT_TOKEN="TOKEN HERE" go run .`
 func main() {
-	var token = os.Getenv("BOT_TOKEN")
+	config.Load()
+	//	log.Print(config.Conf.Bot.Token)
+	var token = config.Conf.Bot.Token
+
 	if token == "" {
 		log.Fatalln("No $BOT_TOKEN given.")
 	}
@@ -33,22 +38,26 @@ func main() {
 	s.PreHandler.Synchronous = true
 
 	session, err := bot.New(s, commands)
-
 	if err != nil {
 		log.Fatalln(err)
+	}
+	var cmdError error
+	var UnknownCommand *bot.ErrUnknownCommand
+	session.ErrorLogger(cmdError)
+	if errors.As(cmdError, &UnknownCommand) {
+		log.Print(UnknownCommand.Error)
 	}
 
 	// Register subcommands
 	session.MustRegisterSubcommand(&Debug{})
 
 	err = session.Open()
-
+	defer session.Close()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	session.HasPrefix = bot.NewPrefix("!", "~")
-
+	session.HasPrefix = bot.NewPrefix(config.Conf.Bot.Prefix)
 	session.Start()
 
 	// Subcommand demo, but this can be in another package.
@@ -59,7 +68,5 @@ func main() {
 	// versions close on call, but this one will block.
 	// If for some reason you want the Cancel() function, manually make a new
 	// context.
-	if err := session.Wait(); err != nil {
-		log.Fatalln("Gateway fatal error:", err)
-	}
+	select {}
 }
