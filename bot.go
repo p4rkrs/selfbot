@@ -28,6 +28,8 @@ func (bot *Bot) Help(m *gateway.MessageCreateEvent) (string, error) {
 	if m.Author.ID != me.ID {
 		return "", nil
 	}
+
+	bot.Ctx.DeleteMessage(m.ChannelID, m.ID)
 	return bot.Ctx.Help(), nil
 }
 
@@ -43,6 +45,7 @@ func (bot *Bot) Add(m *gateway.MessageCreateEvent, a, b int) error {
 		return nil
 	}
 
+	bot.Ctx.DeleteMessage(m.ChannelID, m.ID)
 	_, err = bot.Ctx.SendMessage(m.ChannelID, content, nil)
 	return err
 }
@@ -57,6 +60,7 @@ func (bot *Bot) Ping(m *gateway.MessageCreateEvent) error {
 	if m.Author.ID != me.ID {
 		return nil
 	}
+	bot.Ctx.DeleteMessage(m.ChannelID, m.ID)
 	_, err = bot.Ctx.SendMessage(m.ChannelID, "Pong!", nil)
 	return err
 }
@@ -76,8 +80,10 @@ func (bot *Bot) Dd(m *gateway.MessageCreateEvent) error {
 	if err != nil {
 		log.Print("Error getting the messages: ", err)
 	}
+	bot.Ctx.DeleteMessage(m.ChannelID, m.ID)
 
 	for _, msg := range msgs {
+
 		if msg.Author.ID == me.ID {
 			err := bot.Ctx.Session.DeleteMessage(m.ChannelID, msg.ID)
 			if err != nil {
@@ -144,8 +150,16 @@ func (bot *Bot) Embed(
 }
 
 // Btc is a simple btc follower
-func (bot *Bot) Btc(
-	m *gateway.MessageCreateEvent, f *arguments.Flag) (*discord.Embed, error) {
+func (bot *Bot) Btc(m *gateway.MessageCreateEvent, f *arguments.Flag) (*discord.Embed, error) {
+	me, err := bot.Ctx.Store.Me()
+	if err != nil {
+		return nil, err
+	}
+
+	if m.Author.ID != me.ID {
+		return nil, nil
+	}
+	bot.Ctx.DeleteMessage(m.ChannelID, m.ID)
 	var currency = f.String()
 	if currency == "" {
 		// Empty message, ignore
