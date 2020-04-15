@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/dying/selfbot/config"
 
@@ -41,13 +42,13 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	var cmdError error
-	var UnknownCommand *bot.ErrUnknownCommand
-	session.ErrorLogger(cmdError)
-	if errors.As(cmdError, &UnknownCommand) {
-		log.Print(UnknownCommand.Error)
+	session.FormatError = func(err error) string {
+		var unknownCmd *bot.ErrUnknownCommand
+		if errors.As(err, &unknownCmd) {
+			return ""
+		}
+		return strings.Replace(err.Error(), "@", "@\u200b", -1)
 	}
-
 	// Register subcommands
 	session.MustRegisterSubcommand(&Debug{})
 
