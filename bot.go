@@ -149,7 +149,7 @@ func (bot *Bot) Embed(
 	return &embed, err
 }
 
-// Btc is a simple btc follower
+// Btc is a simple command to know BTC rates
 func (bot *Bot) Btc(m *gateway.MessageCreateEvent, f *arguments.Flag) (*discord.Embed, error) {
 	me, err := bot.Ctx.Store.Me()
 	if err != nil {
@@ -162,7 +162,7 @@ func (bot *Bot) Btc(m *gateway.MessageCreateEvent, f *arguments.Flag) (*discord.
 	bot.Ctx.DeleteMessage(m.ChannelID, m.ID)
 	var currency = f.String()
 	if currency == "" {
-		// Empty message, ignore
+		// Empty currency, set USD as default
 		currency = "usd"
 	}
 
